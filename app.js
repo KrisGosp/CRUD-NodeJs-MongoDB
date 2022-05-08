@@ -19,12 +19,16 @@ connectToDb((err) => {
 
 //routes 
 app.get('/books', (req, res) => {
-
+    // the current page query parameter
+    const page = req.query.p || 0; // the same as we named it
+    const booksPerPage = 2; // usually should be around 20
     let books = [];
 
     db.collection('books')
         .find()
         .sort({ author: 1 })
+        .skip(page * booksPerPage)
+        .limit(booksPerPage)
         .forEach(book => books.push(book))
         .then(() => {
             res.status(200).json(books)
