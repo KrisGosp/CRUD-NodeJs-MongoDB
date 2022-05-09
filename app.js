@@ -1,5 +1,6 @@
-const { application } = require('express');
+// const { application } = require('express');
 const express = require('express');
+const { auth } = require('express-openid-connect');
 const { ObjectId } = require('mongodb');
 require('dotenv').config();
 const { connectToDb, getDb } = require('./db');
@@ -16,6 +17,32 @@ connectToDb((err) => {
         db = getDb();
     }
 })
+
+// Auth0 Implementation
+
+const config = {
+  authRequired: false,
+  auth0Logout: true,
+  secret: process.env.AUTH_SECRET,
+  baseURL: 'http://localhost:1111',
+  clientID: 'n9qmceKv31NNIvHJuGATgRwukoGgIeRe',
+  issuerBaseURL: 'https://firstauth0.eu.auth0.com'
+};
+
+// auth router attaches /login, /logout, and /callback routes to the baseURL
+app.use(auth(config));
+
+// req.isAuthenticated is provided from the auth router
+app.get('/', (req, res) => {
+  res.send(req.oidc.isAuthenticated() ? 'Logged in' : 'Logged out');
+});
+
+// user profile information
+const { requiresAuth } = require('express-openid-connect');
+
+app.get('/profile', requiresAuth(), (req, res) => {
+  res.send(JSON.stringify(req.oidc.user));
+});
 
 //routes 
 app.get('/books', (req, res) => {
