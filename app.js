@@ -1,11 +1,13 @@
 // const { application } = require('express');
 const express = require('express');
-const { auth } = require('express-openid-connect');
+const { auth, requiresAuth } = require('express-openid-connect');
 const { ObjectId } = require('mongodb');
-require('dotenv').config();
 const { connectToDb, getDb } = require('./db');
 
+require('dotenv').config();
+
 const app = express();
+
 app.use(express.json());
 
 let db;
@@ -19,7 +21,6 @@ connectToDb((err) => {
 })
 
 // Auth0 Implementation
-
 const config = {
   authRequired: false,
   auth0Logout: true,
@@ -38,11 +39,10 @@ app.get('/', (req, res) => {
 });
 
 // user profile information
-const { requiresAuth } = require('express-openid-connect');
-
 app.get('/profile', requiresAuth(), (req, res) => {
   res.send(JSON.stringify(req.oidc.user));
 });
+
 
 //routes 
 app.get('/books', (req, res) => {
@@ -65,20 +65,6 @@ app.get('/books', (req, res) => {
         })
 });
 
-// app.get('/', (req, res) => {
-//     db.collection('books')
-//     .insertOne({
-//         title: "All About Me",
-//         author: "Marshall Metkins",
-//         pages: 100,
-//         genres: [ "rap", "coding" ],
-//         rating: 7
-//     })
-//     .then(() => {
-//         res.status(200).json({msg: 'added'})
-//     })
-// })
-
 app.get('/books/:id', (req, res) => {
 
     if (ObjectId.isValid(req.params.id)) { // check if the id is valid so we dont get BSON errors
@@ -95,7 +81,6 @@ app.get('/books/:id', (req, res) => {
         res.status(500).json({ error: 'Not a valid id'})
     }
     // IF THE ID IS VALID BUT IS NOT MATCHING ANY IN THE DB, null IS RETURNED
-    // TO DO !!! HANDLE null
 })
 
 app.post('/books', (req, res) => {
